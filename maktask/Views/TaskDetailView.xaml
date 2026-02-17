@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="maktask.Views.TaskDetailView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:maktask.Views"
+    xmlns:vm="using:maktask.ViewModels"
+    xmlns:models="using:maktask.Models"
+    xmlns:converters="using:maktask.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
+        <converters:ColorStringToBrushConverter x:Key="ColorToBrushConverter"/>
+        <converters:DateTimeToStringConverter x:Key="DateTimeToString"/>
+    </UserControl.Resources>
+
+    <ScrollViewer Background="#FAFAFA" HorizontalScrollBarVisibility="Disabled">
+        <Grid HorizontalAlignment="Center">
+            <StackPanel Padding="40" Width="700" Spacing="24">
+                <!-- ヘッダー -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Spacing="8">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Ellipse x:Name="ProjectColorEllipse" Width="12" Height="12"/>
+                            <TextBlock x:Name="ProjectNameText" Foreground="#666666" FontSize="13"/>
+                        </StackPanel>
+                        <TextBlock Text="{x:Bind ViewModel.TaskName, Mode=OneWay}" 
+                                   FontSize="24" FontWeight="SemiBold" Foreground="#333333"
+                                   Visibility="{x:Bind ViewModel.IsEditing, Mode=OneWay, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}"/>
+                        <TextBox Text="{x:Bind ViewModel.TaskName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                 Visibility="{x:Bind ViewModel.IsEditing, Mode=OneWay, Converter={StaticResource BoolToVisibility}}"
+                                 FontSize="20" Background="#FFFFFF" BorderBrush="#E0E0E0" CornerRadius="6"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                        <Button Content="編集" Click="StartEdit_Click" Padding="16,8" CornerRadius="6"
+                                Background="#F0F0F0" BorderThickness="0"
+                                Visibility="{x:Bind ViewModel.IsEditing, Mode=OneWay, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}"/>
+                        <Button Content="保存" Click="SaveEdit_Click" Padding="16,8" CornerRadius="6"
+                                Background="#0078D4" Foreground="White" BorderThickness="0"
+                                Visibility="{x:Bind ViewModel.IsEditing, Mode=OneWay, Converter={StaticResource BoolToVisibility}}"/>
+                        <Button Content="キャンセル" Click="CancelEdit_Click" Padding="16,8" CornerRadius="6"
+                                Background="#F0F0F0" BorderThickness="0"
+                                Visibility="{x:Bind ViewModel.IsEditing, Mode=OneWay, Converter={StaticResource BoolToVisibility}}"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- 期間 -->
+                <Border Background="#FFFFFF" CornerRadius="8" Padding="20" BorderBrush="#E8E8E8" BorderThickness="1">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="期間" FontSize="13" FontWeight="SemiBold" Foreground="#666666"/>
+                        <TextBlock x:Name="DateRangeText" FontSize="14" Foreground="#333333"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- サブタスク -->
+                <Border Background="#FFFFFF" CornerRadius="8" Padding="20" BorderBrush="#E8E8E8" BorderThickness="1">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="サブタスク" FontSize="13" FontWeight="SemiBold" Foreground="#666666"/>
+                        <StackPanel x:Name="SubtasksPanel"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- メモ -->
+                <Border Background="#FFFFFF" CornerRadius="8" Padding="20" BorderBrush="#E8E8E8" BorderThickness="1">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="メモ" FontSize="13" FontWeight="SemiBold" Foreground="#666666"/>
+                        <TextBlock Text="{x:Bind ViewModel.Memo, Mode=OneWay}" TextWrapping="Wrap"
+                                   Visibility="{x:Bind ViewModel.IsEditing, Mode=OneWay, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}"/>
+                        <TextBox Text="{x:Bind ViewModel.Memo, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                 AcceptsReturn="True" TextWrapping="Wrap" MinHeight="100"
+                                 PlaceholderText="メモを入力..."
+                                 Background="#FAFAFA" BorderBrush="#E0E0E0" CornerRadius="6" Padding="12"
+                                 Visibility="{x:Bind ViewModel.IsEditing, Mode=OneWay, Converter={StaticResource BoolToVisibility}}"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- 進捗記録 -->
+                <Border Background="#FFFFFF" CornerRadius="8" Padding="20" BorderBrush="#E8E8E8" BorderThickness="1">
+                    <StackPanel Spacing="16">
+                        <TextBlock Text="進捗記録" FontSize="13" FontWeight="SemiBold" Foreground="#666666"/>
+
+                        <!-- 進捗カレンダー -->
+                        <Border Background="#FAFAFA" CornerRadius="6" Padding="12">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="進捗カレンダー" FontSize="12" Foreground="#888888"/>
+                                <Grid x:Name="ProgressCalendarGrid" ColumnSpacing="2" RowSpacing="2"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- 新規記録入力 -->
+                        <Border Background="#F8F8F8" CornerRadius="6" Padding="12">
+                            <StackPanel Spacing="8">
+                                <TextBox Text="{x:Bind ViewModel.NewLogTitle, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         PlaceholderText="タイトル"
+                                         Background="#FFFFFF" BorderBrush="#E0E0E0" CornerRadius="4" Padding="10"/>
+                                <TextBox Text="{x:Bind ViewModel.NewLogMemo, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         PlaceholderText="メモ" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="50"
+                                         Background="#FFFFFF" BorderBrush="#E0E0E0" CornerRadius="4" Padding="10"/>
+                                <Button Content="＋ 記録を追加" Click="AddLog_Click" HorizontalAlignment="Right"
+                                        Padding="12,8" CornerRadius="6" Background="#0078D4" Foreground="White" BorderThickness="0"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- 記録リスト -->
+                        <StackPanel x:Name="LogsPanel"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- 削除ボタン -->
+                <Button Content="タスクを削除" Click="DeleteTask_Click" HorizontalAlignment="Right"
+                        Padding="16,10" CornerRadius="6"
+                        Background="#FFEBEE" Foreground="#D32F2F" BorderBrush="#FFCDD2" BorderThickness="1"/>
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
+</UserControl>

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="maktask.Views.TaskListView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:maktask.Views"
+    xmlns:models="using:maktask.Models"
+    xmlns:converters="using:maktask.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <converters:ColorStringToBrushConverter x:Key="ColorToBrushConverter"/>
+        <converters:DateTimeToStringConverter x:Key="DateTimeToString"/>
+    </UserControl.Resources>
+
+    <ScrollViewer Padding="16">
+        <ItemsControl x:Name="ProjectGroups">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="local:ProjectTaskGroup">
+                    <StackPanel Margin="0,0,0,24">
+                        <!-- Project Header -->
+                        <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,8">
+                            <Ellipse Width="16" Height="16" 
+                                     Fill="{x:Bind Project.ThemeColor, Converter={StaticResource ColorToBrushConverter}}"/>
+                            <TextBlock Text="{x:Bind Project.Name}" Style="{StaticResource SubtitleTextBlockStyle}"/>
+                            <TextBlock Text="{x:Bind TaskCountText}" Opacity="0.6" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <!-- Tasks -->
+                        <ItemsControl ItemsSource="{x:Bind Tasks}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="models:TaskItem">
+                                    <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                            CornerRadius="4" Margin="0,4,0,4" Padding="12,8"
+                                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+                                            Tapped="TaskBorder_Tapped"
+                                            RightTapped="TaskBorder_RightTapped"
+                                            PointerEntered="TaskBorder_PointerEntered"
+                                            PointerExited="TaskBorder_PointerExited"
+                                            Loaded="TaskBorder_Loaded">
+                                        <Grid ColumnSpacing="16">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{x:Bind Name}" VerticalAlignment="Center"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Grid.Column="1" VerticalAlignment="Center" Opacity="0.7"
+                                                       x:Name="DateText"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </ScrollViewer>
+</UserControl>

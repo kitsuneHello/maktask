@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="maktask.Views.ProjectCreateView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:maktask.Views"
+    xmlns:converters="using:maktask.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <converters:ColorStringToBrushConverter x:Key="ColorToBrushConverter"/>
+    </UserControl.Resources>
+
+    <ScrollViewer Background="#FAFAFA" HorizontalScrollBarVisibility="Disabled">
+        <Grid HorizontalAlignment="Center">
+            <StackPanel Padding="40" Width="700" Spacing="24">
+                <TextBlock Text="プロジェクト作成" FontSize="24" FontWeight="SemiBold" Foreground="#333333"/>
+
+                <Border Background="#FFFFFF" CornerRadius="8" Padding="20" BorderBrush="#E8E8E8" BorderThickness="1">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="プロジェクト名" FontSize="13" FontWeight="SemiBold" Foreground="#666666"/>
+                        <TextBox x:Name="ProjectNameBox" PlaceholderText="プロジェクト名を入力" 
+                                 Text="{x:Bind ViewModel.ProjectName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                 Background="#FAFAFA" BorderBrush="#E0E0E0" CornerRadius="6" Padding="12"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Background="#FFFFFF" CornerRadius="8" Padding="20" BorderBrush="#E8E8E8" BorderThickness="1">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="テーマカラー" FontSize="13" FontWeight="SemiBold" Foreground="#666666"/>
+                        <Grid ColumnSpacing="16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Ellipse Width="32" Height="32" 
+                                     Fill="{x:Bind ViewModel.ThemeColor, Mode=OneWay, Converter={StaticResource ColorToBrushConverter}}"/>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                                <Border Background="#0078D4" Width="36" Height="36" CornerRadius="18" 
+                                        Tapped="ColorBorder_Tapped" Tag="#0078D4"
+                                        PointerEntered="ColorBorder_PointerEntered" PointerExited="ColorBorder_PointerExited"/>
+                                <Border Background="#E81123" Width="36" Height="36" CornerRadius="18" 
+                                        Tapped="ColorBorder_Tapped" Tag="#E81123"
+                                        PointerEntered="ColorBorder_PointerEntered" PointerExited="ColorBorder_PointerExited"/>
+                                <Border Background="#107C10" Width="36" Height="36" CornerRadius="18" 
+                                        Tapped="ColorBorder_Tapped" Tag="#107C10"
+                                        PointerEntered="ColorBorder_PointerEntered" PointerExited="ColorBorder_PointerExited"/>
+                                <Border Background="#FF8C00" Width="36" Height="36" CornerRadius="18" 
+                                        Tapped="ColorBorder_Tapped" Tag="#FF8C00"
+                                        PointerEntered="ColorBorder_PointerEntered" PointerExited="ColorBorder_PointerExited"/>
+                                <Border Background="#5C2D91" Width="36" Height="36" CornerRadius="18" 
+                                        Tapped="ColorBorder_Tapped" Tag="#5C2D91"
+                                        PointerEntered="ColorBorder_PointerEntered" PointerExited="ColorBorder_PointerExited"/>
+                                <Border Background="#00B7C3" Width="36" Height="36" CornerRadius="18" 
+                                        Tapped="ColorBorder_Tapped" Tag="#00B7C3"
+                                        PointerEntered="ColorBorder_PointerEntered" PointerExited="ColorBorder_PointerExited"/>
+                                <Border Background="#E3008C" Width="36" Height="36" CornerRadius="18" 
+                                        Tapped="ColorBorder_Tapped" Tag="#E3008C"
+                                        PointerEntered="ColorBorder_PointerEntered" PointerExited="ColorBorder_PointerExited"/>
+                                <Border Background="#767676" Width="36" Height="36" CornerRadius="18" 
+                                        Tapped="ColorBorder_Tapped" Tag="#767676"
+                                        PointerEntered="ColorBorder_PointerEntered" PointerExited="ColorBorder_PointerExited"/>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <Button Content="作成" HorizontalAlignment="Left" MinWidth="120" Click="Create_Click"
+                        Padding="16,10" CornerRadius="6" Background="#0078D4" Foreground="White" BorderThickness="0"/>
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
+</UserControl>

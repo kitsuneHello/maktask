@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="maktask.Views.HomeView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:maktask.Views"
+    xmlns:vm="using:maktask.ViewModels"
+    xmlns:models="using:maktask.Models"
+    xmlns:converters="using:maktask.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <converters:ColorStringToBrushConverter x:Key="ColorToBrushConverter"/>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
+        <converters:DateTimeToStringConverter x:Key="DateTimeToString"/>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="280"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- 左パネル: 今日のタスク（プロジェクト別） -->
+        <Border Grid.Column="0" Background="#FFFFFF" BorderBrush="#E8E8E8" BorderThickness="0,0,1,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0" Padding="16,16,16,8">
+                    <TextBlock Text="今日のタスク" FontSize="16" FontWeight="SemiBold" Foreground="#333333"/>
+                    <TextBlock x:Name="TodayDateText" FontSize="12" Foreground="#888888" Margin="0,4,0,0"/>
+                </StackPanel>
+
+                <ScrollViewer Grid.Row="1" Padding="12,0,12,12">
+                    <StackPanel x:Name="TodayTasksPanel" Spacing="16"/>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+
+        <!-- 右パネル: メインビュー -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- View Selector and Controls -->
+            <Grid Grid.Row="0" Padding="16" ColumnSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <RadioButton Content="カレンダー" GroupName="ViewMode" 
+                                 IsChecked="{x:Bind IsCalendarView, Mode=TwoWay}" 
+                                 Style="{StaticResource DefaultToggleButtonStyle}"/>
+                    <RadioButton Content="ガントチャート" GroupName="ViewMode" 
+                                 IsChecked="{x:Bind IsGanttView, Mode=TwoWay}"
+                                 Style="{StaticResource DefaultToggleButtonStyle}"/>
+                    <RadioButton Content="リスト" GroupName="ViewMode" 
+                                 IsChecked="{x:Bind IsListView, Mode=TwoWay}"
+                                 Style="{StaticResource DefaultToggleButtonStyle}"/>
+                </StackPanel>
+
+                <!-- Calendar Navigation -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" 
+                            HorizontalAlignment="Center"
+                            Visibility="{x:Bind IsCalendarView, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+                    <Button Content="◀" Click="PrevMonth_Click" Width="40"/>
+                    <TextBlock Text="{x:Bind ViewModel.CurrentMonth, Mode=OneWay, Converter={StaticResource DateTimeToString}, ConverterParameter='yyyy年M月'}" 
+                               VerticalAlignment="Center" Style="{StaticResource SubtitleTextBlockStyle}" Width="120" TextAlignment="Center"/>
+                    <Button Content="▶" Click="NextMonth_Click" Width="40"/>
+                    <Button Content="今日" Click="GoToToday_Click" Margin="16,0,0,0"/>
+                </StackPanel>
+
+                <Button Grid.Column="2" Content="タスク作成" Style="{StaticResource AccentButtonStyle}" 
+                        Click="CreateTask_Click"/>
+            </Grid>
+
+            <!-- View Content -->
+            <Grid Grid.Row="1">
+                <local:CalendarView x:Name="CalendarViewControl" 
+                                    Visibility="{x:Bind IsCalendarView, Mode=OneWay, Converter={StaticResource BoolToVisibility}}"/>
+                <local:GanttChartView x:Name="GanttChartViewControl"
+                                      Visibility="{x:Bind IsGanttView, Mode=OneWay, Converter={StaticResource BoolToVisibility}}"/>
+                <local:TaskListView x:Name="TaskListViewControl"
+                                    Visibility="{x:Bind IsListView, Mode=OneWay, Converter={StaticResource BoolToVisibility}}"/>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

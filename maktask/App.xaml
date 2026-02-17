@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Application
+    x:Class="maktask.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:maktask"
+    xmlns:converters="using:maktask.Converters">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
+            </ResourceDictionary.MergedDictionaries>
+            <converters:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
+            <converters:ColorStringToBrushConverter x:Key="ColorToBrushConverter"/>
+            <converters:DateTimeToStringConverter x:Key="DateTimeToString"/>
+            <converters:StrikethroughConverter x:Key="StrikethroughConverter"/>
+
+            <!-- ToggleSwitch ONで緑色 -->
+            <SolidColorBrush x:Key="ToggleSwitchFillOn" Color="#4CAF50"/>
+            <SolidColorBrush x:Key="ToggleSwitchFillOnPointerOver" Color="#66BB6A"/>
+            <SolidColorBrush x:Key="ToggleSwitchFillOnPressed" Color="#388E3C"/>
+
+            <!-- 削除ボタンスタイル -->
+            <Style x:Key="DeleteButtonStyle" TargetType="Button">
+                <Setter Property="Background" Value="#FFEBEE"/>
+                <Setter Property="Foreground" Value="#D32F2F"/>
+                <Setter Property="BorderBrush" Value="#FFCDD2"/>
+            </Style>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

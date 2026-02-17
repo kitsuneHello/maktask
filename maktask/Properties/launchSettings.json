@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "maktask (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "maktask (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

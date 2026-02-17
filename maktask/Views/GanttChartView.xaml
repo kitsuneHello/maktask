@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="maktask.Views.GanttChartView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:maktask.Views"
+    xmlns:converters="using:maktask.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <converters:ColorStringToBrushConverter x:Key="ColorToBrushConverter"/>
+    </UserControl.Resources>
+
+    <Grid Padding="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Scale Controls -->
+        <StackPanel Orientation="Horizontal" Spacing="8" Grid.Row="0" Margin="0,0,0,16">
+            <TextBlock Text="表示単位:" VerticalAlignment="Center"/>
+            <RadioButton Content="月" GroupName="GanttScale" IsChecked="{x:Bind IsMonthScale, Mode=TwoWay}"/>
+            <RadioButton Content="週" GroupName="GanttScale" IsChecked="{x:Bind IsWeekScale, Mode=TwoWay}"/>
+            <RadioButton Content="日" GroupName="GanttScale" IsChecked="{x:Bind IsDayScale, Mode=TwoWay}"/>
+        </StackPanel>
+
+        <!-- Gantt Content -->
+        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                      HorizontalAlignment="Left" VerticalAlignment="Top">
+            <Canvas x:Name="GanttCanvas" Background="#FFFFFF"/>
+        </ScrollViewer>
+    </Grid>
+</UserControl>
