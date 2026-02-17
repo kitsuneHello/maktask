@@ -80,61 +80,140 @@ public sealed partial class TaskDetailView : UserControl
 
         var startDate = ViewModel.Task.StartDateTime.Date;
         var endDate = ViewModel.Task.EndDateTime.Date;
-        var totalDays = (endDate - startDate).Days + 1;
+        var logDates = ViewModel.Logs.Select(l => l.LogDateTime.Date).Distinct().ToHashSet();
 
-        // 最大14列まで
-        var columns = Math.Min(totalDays, 14);
-        var rows = (int)Math.Ceiling((double)totalDays / columns);
+        // 月ごとにグループ化
+        var months = new List<(int Year, int Month)>();
+        var current = new DateTime(startDate.Year, startDate.Month, 1);
+        var lastMonth = new DateTime(endDate.Year, endDate.Month, 1);
 
-        for (int c = 0; c < columns; c++)
+        while (current <= lastMonth)
+        {
+            months.Add((current.Year, current.Month));
+            current = current.AddMonths(1);
+        }
+
+        // 7列（日〜土）固定
+        for (int c = 0; c < 7; c++)
         {
             ProgressCalendarGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         }
-        for (int r = 0; r < rows; r++)
+
+        int rowIndex = 0;
+
+        foreach (var (year, month) in months)
         {
+            var firstDayOfMonth = new DateTime(year, month, 1);
+            var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
+
+            // タスク期間内の日付のみ表示
+            var displayStart = firstDayOfMonth < startDate ? startDate : firstDayOfMonth;
+            var displayEnd = lastDayOfMonth > endDate ? endDate : lastDayOfMonth;
+
+            // 月ヘッダー行
             ProgressCalendarGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-        }
-
-        var logDates = ViewModel.Logs.Select(l => l.LogDateTime.Date).Distinct().ToHashSet();
-
-        for (int i = 0; i < totalDays; i++)
-        {
-            var date = startDate.AddDays(i);
-            var hasLog = logDates.Contains(date);
-            var isToday = date == DateTime.Today;
-
-            var cell = new Border
+            var monthHeader = new TextBlock
             {
-                Width = 36,
-                Height = 36,
-                Margin = new Thickness(2),
-                CornerRadius = new CornerRadius(4),
-                Background = hasLog 
-                    ? new SolidColorBrush(Color.FromArgb(255, 76, 175, 80)) // 緑
-                    : date < DateTime.Today 
-                        ? new SolidColorBrush(Color.FromArgb(255, 240, 240, 240)) // 過去で記録なし
-                        : new SolidColorBrush(Color.FromArgb(255, 250, 250, 250)), // 未来
-                BorderBrush = isToday 
-                    ? new SolidColorBrush(Color.FromArgb(255, 33, 150, 243)) 
-                    : new SolidColorBrush(Colors.Transparent),
-                BorderThickness = isToday ? new Thickness(2) : new Thickness(0),
-                Child = new TextBlock
-                {
-                    Text = date.Day.ToString(),
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center,
-                    FontSize = 11,
-                    Foreground = hasLog 
-                        ? new SolidColorBrush(Colors.White) 
-                        : new SolidColorBrush(Color.FromArgb(255, 100, 100, 100))
-                }
+                Text = $"{year}年{month}月",
+                FontWeight = FontWeights.SemiBold,
+                FontSize = 12,
+                Foreground = new SolidColorBrush(Color.FromArgb(255, 80, 80, 80)),
+                Margin = new Thickness(0, rowIndex > 0 ? 12 : 0, 0, 4)
             };
+            Grid.SetRow(monthHeader, rowIndex);
+            Grid.SetColumnSpan(monthHeader, 7);
+            ProgressCalendarGrid.Children.Add(monthHeader);
+            rowIndex++;
 
-            ToolTipService.SetToolTip(cell, $"{date:yyyy/MM/dd}" + (hasLog ? " (記録あり)" : ""));
+            // 曜日ヘッダー行
+            ProgressCalendarGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            var dayNames = new[] { "日", "月", "火", "水", "木", "金", "土" };
+            for (int d = 0; d < 7; d++)
+            {
+                var dayHeader = new TextBlock
+                {
+                    Text = dayNames[d],
+                    FontSize = 10,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    Foreground = d == 0 ? new SolidColorBrush(Color.FromArgb(255, 220, 80, 80)) :
+                                d == 6 ? new SolidColorBrush(Color.FromArgb(255, 80, 120, 200)) :
+                                new SolidColorBrush(Color.FromArgb(255, 120, 120, 120))
+                };
+                Grid.SetRow(dayHeader, rowIndex);
+                Grid.SetColumn(dayHeader, d);
+                ProgressCalendarGrid.Children.Add(dayHeader);
+            }
+            rowIndex++;
 
-            Grid.SetColumn(cell, i % columns);
-            Grid.SetRow(cell, i / columns);
-            ProgressCalendarGrid.Children.Add(cell);
+            // カレンダー開始位置（月初の曜日）
+            var firstDayOfWeek = (int)firstDayOfMonth.DayOfWeek;
+            var daysInMonth = DateTime.DaysInMonth(year, month);
+            var totalCells = firstDayOfWeek + daysInMonth;
+            var weeksNeeded = (int)Math.Ceiling(totalCells / 7.0);
+
+            for (int w = 0; w < weeksNeeded; w++)
+            {
+                ProgressCalendarGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+                for (int d = 0; d < 7; d++)
+                {
+                    var cellIndex = w * 7 + d;
+                    var dayNum = cellIndex - firstDayOfWeek + 1;
+
+                    if (dayNum < 1 || dayNum > daysInMonth)
+                    {
+                        // 空セル
+                        continue;
+                    }
+
+                    var date = new DateTime(year, month, dayNum);
+                    var isInRange = date >= startDate && date <= endDate;
+                    var hasLog = logDates.Contains(date);
+                    var isToday = date == DateTime.Today;
+
+                    var cell = new Border
+                    {
+                        Width = 28,
+                        Height = 28,
+                        Margin = new Thickness(1),
+                        CornerRadius = new CornerRadius(4),
+                        Opacity = isInRange ? 1.0 : 0.3,
+                        Background = !isInRange
+                            ? new SolidColorBrush(Color.FromArgb(255, 245, 245, 245))
+                            : hasLog 
+                                ? new SolidColorBrush(Color.FromArgb(255, 76, 175, 80)) // 緑
+                                : date < DateTime.Today 
+                                    ? new SolidColorBrush(Color.FromArgb(255, 240, 240, 240)) // 過去で記録なし
+                                    : new SolidColorBrush(Color.FromArgb(255, 250, 250, 250)), // 未来
+                        BorderBrush = isToday 
+                            ? new SolidColorBrush(Color.FromArgb(255, 33, 150, 243)) 
+                            : new SolidColorBrush(Colors.Transparent),
+                        BorderThickness = isToday ? new Thickness(2) : new Thickness(0),
+                        Child = new TextBlock
+                        {
+                            Text = dayNum.ToString(),
+                            HorizontalAlignment = HorizontalAlignment.Center,
+                            VerticalAlignment = VerticalAlignment.Center,
+                            FontSize = 10,
+                            Foreground = hasLog && isInRange
+                                ? new SolidColorBrush(Colors.White) 
+                                : d == 0 ? new SolidColorBrush(Color.FromArgb(255, 220, 80, 80)) :
+                                  d == 6 ? new SolidColorBrush(Color.FromArgb(255, 80, 120, 200)) :
+                                  new SolidColorBrush(Color.FromArgb(255, 80, 80, 80))
+                        }
+                    };
+
+                    if (isInRange)
+                    {
+                        ToolTipService.SetToolTip(cell, $"{date:yyyy/MM/dd}" + (hasLog ? " (記録あり)" : ""));
+                    }
+
+                    Grid.SetRow(cell, rowIndex);
+                    Grid.SetColumn(cell, d);
+                    ProgressCalendarGrid.Children.Add(cell);
+                }
+                rowIndex++;
+            }
         }
     }
 
@@ -150,9 +229,10 @@ public sealed partial class TaskDetailView : UserControl
 
         foreach (var subtaskVm in ViewModel.Subtasks)
         {
-            var grid = new Grid { Margin = new Thickness(0, 4, 0, 4), ColumnSpacing = 12 };
+            var grid = new Grid { Margin = new Thickness(0, 4, 0, 4), ColumnSpacing = 8 };
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
             var checkBox = new CheckBox { IsChecked = subtaskVm.IsCompleted };
@@ -164,7 +244,8 @@ public sealed partial class TaskDetailView : UserControl
             var nameText = new TextBlock
             {
                 Text = subtaskVm.Subtask.Name,
-                VerticalAlignment = VerticalAlignment.Center
+                VerticalAlignment = VerticalAlignment.Center,
+                TextDecorations = subtaskVm.IsCompleted ? Windows.UI.Text.TextDecorations.Strikethrough : Windows.UI.Text.TextDecorations.None
             };
             Grid.SetColumn(nameText, 1);
             grid.Children.Add(nameText);
@@ -178,6 +259,22 @@ public sealed partial class TaskDetailView : UserControl
             };
             Grid.SetColumn(dateText, 2);
             grid.Children.Add(dateText);
+
+            var deleteBtn = new Button
+            {
+                Content = new FontIcon { Glyph = "\uE74D", FontSize = 12 },
+                Background = new SolidColorBrush(Colors.Transparent),
+                Padding = new Thickness(6),
+                BorderThickness = new Thickness(0)
+            };
+            var subtask = subtaskVm.Subtask;
+            deleteBtn.Click += async (s, e) =>
+            {
+                await ViewModel.DeleteSubtaskCommand.ExecuteAsync(subtask);
+                RefreshSubtasks();
+            };
+            Grid.SetColumn(deleteBtn, 3);
+            grid.Children.Add(deleteBtn);
 
             SubtasksPanel.Children.Add(grid);
         }
@@ -265,6 +362,119 @@ public sealed partial class TaskDetailView : UserControl
     private void CancelEdit_Click(object sender, RoutedEventArgs e)
     {
         ViewModel.CancelEditCommand.Execute(null);
+    }
+
+    private void AddSubtask_Click(object sender, RoutedEventArgs e)
+    {
+        // フォームを表示し、デフォルト値を設定
+        AddSubtaskForm.Visibility = Visibility.Visible;
+        NewSubtaskNameBox.Text = "";
+        SubtaskIsAllDayToggle.IsOn = true;
+        SubtaskIsDeadlineModeToggle.IsOn = false;
+
+        if (ViewModel.Task != null)
+        {
+            SubtaskStartDatePicker.Date = new DateTimeOffset(ViewModel.Task.StartDateTime.Date);
+            SubtaskEndDatePicker.Date = new DateTimeOffset(ViewModel.Task.EndDateTime.Date);
+        }
+        else
+        {
+            SubtaskStartDatePicker.Date = DateTimeOffset.Now;
+            SubtaskEndDatePicker.Date = DateTimeOffset.Now;
+        }
+    }
+
+    private void CancelAddSubtask_Click(object sender, RoutedEventArgs e)
+    {
+        AddSubtaskForm.Visibility = Visibility.Collapsed;
+    }
+
+    private void SubtaskIsAllDayToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        // 終日トグルの状態に応じて時刻選択の表示/非表示を切り替え
+        var startTimePanel = FindName("SubtaskStartTimePanel") as StackPanel;
+        var endTimePanel = FindName("SubtaskEndTimePanel") as StackPanel;
+
+        var visibility = SubtaskIsAllDayToggle.IsOn ? Visibility.Collapsed : Visibility.Visible;
+
+        if (startTimePanel != null) startTimePanel.Visibility = visibility;
+        if (endTimePanel != null) endTimePanel.Visibility = visibility;
+    }
+
+    private void SubtaskIsDeadlineModeToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        // 期限モードの状態に応じて開始日を非表示にし、ラベルを変更
+        var startDateGrid = FindName("SubtaskStartDateGrid") as Grid;
+        var endDateLabel = FindName("SubtaskEndDateLabel") as TextBlock;
+        var endTimeLabel = FindName("SubtaskEndTimeLabel") as TextBlock;
+
+        var isDeadlineMode = SubtaskIsDeadlineModeToggle.IsOn;
+
+        if (startDateGrid != null)
+        {
+            startDateGrid.Visibility = isDeadlineMode ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+        if (endDateLabel != null)
+        {
+            endDateLabel.Text = isDeadlineMode ? "期限日" : "終了日";
+        }
+
+        if (endTimeLabel != null)
+        {
+            endTimeLabel.Text = isDeadlineMode ? "期限時刻" : "終了時刻";
+        }
+    }
+
+    private async void ConfirmAddSubtask_Click(object sender, RoutedEventArgs e)
+    {
+        if (string.IsNullOrWhiteSpace(NewSubtaskNameBox.Text))
+        {
+            var dialog = new ContentDialog
+            {
+                Title = "入力エラー",
+                Content = "サブタスク名を入力してください。",
+                CloseButtonText = "OK",
+                XamlRoot = this.XamlRoot
+            };
+            await dialog.ShowAsync();
+            return;
+        }
+
+        DateTime startDateTime, endDateTime;
+
+        var startDate = SubtaskStartDatePicker.Date?.DateTime.Date ?? DateTime.Today;
+        var endDate = SubtaskEndDatePicker.Date?.DateTime.Date ?? DateTime.Today;
+
+        if (SubtaskIsAllDayToggle.IsOn)
+        {
+            startDateTime = startDate;
+            endDateTime = endDate;
+        }
+        else
+        {
+            var startTimePicker = FindName("SubtaskStartTimePicker") as TimePicker;
+            var endTimePicker = FindName("SubtaskEndTimePicker") as TimePicker;
+
+            var startTime = startTimePicker?.Time ?? new TimeSpan(9, 0, 0);
+            var endTime = endTimePicker?.Time ?? new TimeSpan(17, 0, 0);
+
+            startDateTime = startDate.Add(startTime);
+            endDateTime = endDate.Add(endTime);
+        }
+
+        var subtask = new Subtask
+        {
+            Name = NewSubtaskNameBox.Text.Trim(),
+            StartDateTime = startDateTime,
+            EndDateTime = endDateTime,
+            IsAllDay = SubtaskIsAllDayToggle.IsOn,
+            IsDeadlineMode = SubtaskIsDeadlineModeToggle.IsOn
+        };
+
+        await ViewModel.AddSubtaskCommand.ExecuteAsync(subtask);
+        AddSubtaskForm.Visibility = Visibility.Collapsed;
+        RefreshSubtasks();
     }
 
     private async void AddLog_Click(object sender, RoutedEventArgs e)

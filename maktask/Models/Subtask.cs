@@ -10,4 +10,6 @@ public class Subtask
     public DateTime StartDateTime { get; set; } = DateTime.Today;
     public DateTime EndDateTime { get; set; } = DateTime.Today;
     public bool IsCompleted { get; set; } = false;
+    public bool IsAllDay { get; set; } = true;
+    public bool IsDeadlineMode { get; set; } = false;
 }

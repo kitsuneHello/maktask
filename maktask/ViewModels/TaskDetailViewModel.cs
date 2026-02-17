@@ -150,6 +150,34 @@ public partial class TaskDetailViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private async Task AddSubtask(Subtask subtask)
+    {
+        if (Task == null || subtask == null) return;
+
+        Task.Subtasks.Add(subtask);
+        await _dataService.UpdateTaskAsync(Task);
+
+        var vm = new SubtaskItemViewModel(subtask);
+        vm.CompletionChanged += OnSubtaskCompletionChanged;
+        Subtasks.Add(vm);
+    }
+
+    [RelayCommand]
+    private async Task DeleteSubtask(Subtask subtask)
+    {
+        if (Task == null || subtask == null) return;
+
+        Task.Subtasks.Remove(subtask);
+        await _dataService.UpdateTaskAsync(Task);
+
+        var vm = Subtasks.FirstOrDefault(s => s.Subtask == subtask);
+        if (vm != null)
+        {
+            Subtasks.Remove(vm);
+        }
+    }
+
+    [RelayCommand]
     private async Task AddLog()
     {
         if (Task == null || string.IsNullOrWhiteSpace(NewLogTitle)) return;

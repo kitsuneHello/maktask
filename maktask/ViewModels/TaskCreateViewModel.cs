@@ -38,10 +38,15 @@ public partial class TaskCreateViewModel : ObservableObject
     private bool _isAllDay = true;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(EndDateLabel))]
+    [NotifyPropertyChangedFor(nameof(EndTimeLabel))]
     private bool _isDeadlineMode = false;
 
     [ObservableProperty]
     private string _memo = string.Empty;
+
+    public string EndDateLabel => IsDeadlineMode ? "期限日" : "終了日";
+    public string EndTimeLabel => IsDeadlineMode ? "期限時刻" : "終了時刻";
 
     public ObservableCollection<SubtaskViewModel> Subtasks { get; } = new();
 
@@ -112,8 +117,10 @@ public partial class TaskCreateViewModel : ObservableObject
             {
                 TaskId = task.Id,
                 Name = subtaskVm.Name,
-                StartDateTime = subtaskVm.StartDate.Date,
-                EndDateTime = subtaskVm.EndDate.Date
+                StartDateTime = subtaskVm.IsAllDay ? subtaskVm.StartDate.Date : subtaskVm.StartDate.DateTime,
+                EndDateTime = subtaskVm.IsAllDay ? subtaskVm.EndDate.Date : subtaskVm.EndDate.DateTime,
+                IsAllDay = subtaskVm.IsAllDay,
+                IsDeadlineMode = subtaskVm.IsDeadlineMode
             });
         }
 
@@ -134,4 +141,10 @@ public partial class SubtaskViewModel : ObservableObject
 
     [ObservableProperty]
     private DateTimeOffset _endDate = DateTimeOffset.Now;
+
+    [ObservableProperty]
+    private bool _isAllDay = true;
+
+    [ObservableProperty]
+    private bool _isDeadlineMode = false;
 }
